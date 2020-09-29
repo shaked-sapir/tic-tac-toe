@@ -14,7 +14,7 @@ export default function GameStatus(props: any) {
     return (
         <div style={getStyle()}>
             <text style={statusStyle}>{props.status}</text>
-            <button className="reset" style={resetStyle}>Reset</button>
+            <button className="reset" onClick={props.onClick} style={resetStyle}>Reset</button>
         </div>
     )
 }

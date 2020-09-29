@@ -11,46 +11,45 @@ export default function Board() {
     const [xIsNext, setXIsNext] = useState(true);
     let [winner, setWinner] = useState(null);
     let [draw, setDraw] = useState(false);
-    let [status, setStatus] = useState(`Next player: ${getCurrentPlayer()}`);
+    let [status, setStatus] = useState(currentPlayerTurnString());
+
+    // will ensure the board is updated before checking for game-over
     const boardUpdatedContainer = useRef(false);
 
     const handleClick = (index: number) => {
-        if(winner || draw) return;
+        if (winner || draw) {
+            return;
+        }
+
         const player = getCurrentPlayer();
         playMove(index, player);
     }
-    
-    
+
+    const getCurrentPlayer = () => {
+        return xIsNext ? X : O;
+    }
+
     const playMove = (cellIndex: number, player: string) => {
         const updatedCells = markCell([...boardCells], cellIndex, player);
         setBoardCells(updatedCells);
         boardUpdatedContainer.current = true;
     }
-    
+
     const markCell = (cells: string[], index: number, player: string): string[] => {
-        if (!cells[index]){
-            console.log("fill")
+        if (!cells[index]) {
             cells[index] = player;
             switchTurns();
         }
 
         return cells;
     }
-    
+
     const switchTurns = () => {
         setXIsNext(!xIsNext);
     }
-    
-    const renderCell = (index: number) => {
-        return <Cell value={boardCells[index]} onClick={() => handleClick(index)}></Cell>
-    }
-    
-    function getCurrentPlayer() {
-        return xIsNext ? X : O;
-    }
-    
+
     useEffect(() => {
-        if(boardUpdatedContainer.current){
+        if (boardUpdatedContainer.current) {
             boardUpdatedContainer.current = !boardUpdatedContainer.current;
             checkIfGameOver();
         }
@@ -58,41 +57,65 @@ export default function Board() {
 
     const checkIfGameOver = () => {
         const winnerSide = getWinner();
-        if(winnerSide){
-            console.log("winner after", winner);
-            // TODO: lock the screen until reset
+        if (winnerSide) {
+            setWinner(winnerSide);
+            setStatus(`${winnerSide} won!`);
         } else {
-            if(isDraw()){
-                setDraw(true)
-                // TODO: lock the screen until reset
-            } 
+            if (isDraw()) {
+                setDraw(true);
+                setStatus(`draw!`);
+            }
         }
     }
 
     const getWinner = () => {
-        winningConfigs["3x3"].forEach((combination: number[]) => {
-            const [a, b, c] = combination;
-            if (boardCells[a] && boardCells[a] === boardCells[b] && boardCells[b] === boardCells[c]) {
-                setWinner(boardCells[a]);
-                setStatus(`${boardCells[a]} won!`);
-                return boardCells[a];
+        winningConfigs["3x3"].forEach((winningOption: number[]) => {
+            const combinationOnBoard = winningOption.reduce((seq: string[], idx: number) => {
+                return [...seq, boardCells[idx]];
+            }, []);
+
+            if (isCombinationWinning(combinationOnBoard)) {
+                return combinationOnBoard[0];
             }
         });
 
+        // no winner yet
         return null;
+    }
+
+    const isCombinationWinning = (combination: string[]) => {
+        return combination[0] && new Set(combination).size === 1;
     }
 
     const isDraw = () => {
         return !getWinner() && boardCells.every((cell: any) => cell);
     }
 
-    status = winner ? `${winner} won!` 
-        : draw ? `draw!` 
-        : `Next player: ${getCurrentPlayer()}`;
+    const resetGame = () => {
+        setDraw(false);
+        setWinner(null);
+        setXIsNext(true);
+        setStatus(currentPlayerTurnString());
+        boardUpdatedContainer.current = false;
+
+        setBoardCells(Array(9).fill(null));
+    }
+
+    function currentPlayerTurnString() {
+        return `Next player: ${getCurrentPlayer()}`;
+    }
+
+    status = winner ? `${winner} won!`
+        : draw ? `draw!`
+            : currentPlayerTurnString();
+
+    const renderCell = (index: number) => {
+        return <Cell value={boardCells[index]} onClick={() => handleClick(index)}></Cell>
+    }
 
     return (
         <div>
-            <GameStatus status={status}></GameStatus>
+            <GameStatus status={status} onClick={() => resetGame()}></GameStatus>
             <div className="boardRow" style={boardRowStyle}>
                 {renderCell(0)}
                 {renderCell(1)}
