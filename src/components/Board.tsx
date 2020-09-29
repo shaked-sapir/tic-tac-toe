@@ -10,23 +10,17 @@ export default function Board() {
     const [boardCells, setBoardCells] = useState(Array(9).fill(null))
     const [xIsNext, setXIsNext] = useState(true);
     let [winner, setWinner] = useState(null);
+    let [draw, setDraw] = useState(false);
     let [status, setStatus] = useState(`Next player: ${getCurrentPlayer()}`);
     const boardUpdatedContainer = useRef(false);
 
     const handleClick = (index: number) => {
-        console.log("handler winner", winner)
-        if(winner) return;
+        if(winner || draw) return;
         const player = getCurrentPlayer();
         playMove(index, player);
     }
     
-    useEffect(() => {
-        if(boardUpdatedContainer.current){
-            boardUpdatedContainer.current = !boardUpdatedContainer.current;
-            checkIfGameOver();
-        }
-    })
-
+    
     const playMove = (cellIndex: number, player: string) => {
         const updatedCells = markCell([...boardCells], cellIndex, player);
         setBoardCells(updatedCells);
@@ -42,34 +36,43 @@ export default function Board() {
 
         return cells;
     }
-
+    
     const switchTurns = () => {
         setXIsNext(!xIsNext);
     }
-
+    
     const renderCell = (index: number) => {
         return <Cell value={boardCells[index]} onClick={() => handleClick(index)}></Cell>
     }
-
+    
     function getCurrentPlayer() {
         return xIsNext ? X : O;
     }
+    
+    useEffect(() => {
+        if(boardUpdatedContainer.current){
+            boardUpdatedContainer.current = !boardUpdatedContainer.current;
+            checkIfGameOver();
+        }
+    });
 
     const checkIfGameOver = () => {
         const winnerSide = getWinner();
         if(winnerSide){
-            console.log("winner after", winner)
+            console.log("winner after", winner);
+            // TODO: lock the screen until reset
         } else {
-            checkIfDraw(); // TODO: lock the screen until reset
+            if(isDraw()){
+                setDraw(true)
+                // TODO: lock the screen until reset
+            } 
         }
     }
 
     const getWinner = () => {
         winningConfigs["3x3"].forEach((combination: number[]) => {
             const [a, b, c] = combination;
-            console.log(boardCells[0]==='X')
             if (boardCells[a] && boardCells[a] === boardCells[b] && boardCells[b] === boardCells[c]) {
-                console.log("WIN")
                 setWinner(boardCells[a]);
                 setStatus(`${boardCells[a]} won!`);
                 return boardCells[a];
@@ -79,17 +82,13 @@ export default function Board() {
         return null;
     }
 
-    const checkIfDraw = () => {
+    const isDraw = () => {
         return !getWinner() && boardCells.every((cell: any) => cell);
     }
 
-    // let status;
-    // winner = getWinner();
-    // console.log("upper winner", winner)
-    status = winner ? `${winner} won!` : `Next player: ${getCurrentPlayer()}`;
-
-    console.log("statusBeforeRender:" , {status})
-    console.log("winnerBeforeRender:" , {winner})
+    status = winner ? `${winner} won!` 
+        : draw ? `draw!` 
+        : `Next player: ${getCurrentPlayer()}`;
 
     return (
         <div>
