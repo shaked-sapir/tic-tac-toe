@@ -1,35 +1,41 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Cell from './Cell';
 import GameStatus from './GameStatus';
+import winningConfigs from '../logic/winningConfigs.json';
 
-// board state
-// turnState - whose turn is it?
-
-// handle click:
-// 1. copy current state
-// 2. mutate - X/O
-// 3. set new state
-// 4. check for win/draw
-// 5. switch turns
 const X = 'X';
 const O = 'O';
 
 export default function Board() {
     const [boardCells, setBoardCells] = useState(Array(9).fill(null))
     const [xIsNext, setXIsNext] = useState(true);
-
-    let status;
-    status = `Next player: ${getCurrentPlayer()}`;
+    let [winner, setWinner] = useState(null);
+    let [status, setStatus] = useState(`Next player: ${getCurrentPlayer()}`);
+    const boardUpdatedContainer = useRef(false);
 
     const handleClick = (index: number) => {
+        console.log("handler winner", winner)
+        if(winner) return;
         const player = getCurrentPlayer();
-        const updatedCells = markCell([...boardCells], index, player);
+        playMove(index, player);
+    }
+    
+    useEffect(() => {
+        if(boardUpdatedContainer.current){
+            boardUpdatedContainer.current = !boardUpdatedContainer.current;
+            checkIfGameOver();
+        }
+    })
+
+    const playMove = (cellIndex: number, player: string) => {
+        const updatedCells = markCell([...boardCells], cellIndex, player);
         setBoardCells(updatedCells);
+        boardUpdatedContainer.current = true;
     }
     
     const markCell = (cells: string[], index: number, player: string): string[] => {
         if (!cells[index]){
+            console.log("fill")
             cells[index] = player;
             switchTurns();
         }
@@ -45,9 +51,45 @@ export default function Board() {
         return <Cell value={boardCells[index]} onClick={() => handleClick(index)}></Cell>
     }
 
-    function getCurrentPlayer(){
+    function getCurrentPlayer() {
         return xIsNext ? X : O;
     }
+
+    const checkIfGameOver = () => {
+        const winnerSide = getWinner();
+        if(winnerSide){
+            console.log("winner after", winner)
+        } else {
+            checkIfDraw(); // TODO: lock the screen until reset
+        }
+    }
+
+    const getWinner = () => {
+        winningConfigs["3x3"].forEach((combination: number[]) => {
+            const [a, b, c] = combination;
+            console.log(boardCells[0]==='X')
+            if (boardCells[a] && boardCells[a] === boardCells[b] && boardCells[b] === boardCells[c]) {
+                console.log("WIN")
+                setWinner(boardCells[a]);
+                setStatus(`${boardCells[a]} won!`);
+                return boardCells[a];
+            }
+        });
+
+        return null;
+    }
+
+    const checkIfDraw = () => {
+        return !getWinner() && boardCells.every((cell: any) => cell);
+    }
+
+    // let status;
+    // winner = getWinner();
+    // console.log("upper winner", winner)
+    status = winner ? `${winner} won!` : `Next player: ${getCurrentPlayer()}`;
+
+    console.log("statusBeforeRender:" , {status})
+    console.log("winnerBeforeRender:" , {winner})
 
     return (
         <div>
