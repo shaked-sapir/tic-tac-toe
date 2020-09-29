@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useState } from 'react'
 import Cell from './Cell';
+import GameStatus from './GameStatus';
 
 // board state
 // turnState - whose turn is it?
@@ -10,15 +12,18 @@ import Cell from './Cell';
 // 3. set new state
 // 4. check for win/draw
 // 5. switch turns
+const X = 'X';
+const O = 'O';
+
 export default function Board() {
     const [boardCells, setBoardCells] = useState(Array(9).fill(null))
     const [xIsNext, setXIsNext] = useState(true);
 
     let status;
-    status = `Next player: ${xIsNext ? 'X' : 'O'}`;
+    status = `Next player: ${getCurrentPlayer()}`;
 
     const handleClick = (index: number) => {
-        const player = xIsNext ? "X" : "O";
+        const player = getCurrentPlayer();
         const updatedCells = markCell([...boardCells], index, player);
         setBoardCells(updatedCells);
     }
@@ -40,9 +45,13 @@ export default function Board() {
         return <Cell value={boardCells[index]} onClick={() => handleClick(index)}></Cell>
     }
 
+    function getCurrentPlayer(){
+        return xIsNext ? X : O;
+    }
+
     return (
         <div>
-            <div className="status">{status}</div>
+            <GameStatus status={status}></GameStatus>
             <div className="boardRow" style={boardRowStyle}>
                 {renderCell(0)}
                 {renderCell(1)}
@@ -63,5 +72,6 @@ export default function Board() {
 
 
 const boardRowStyle = {
-    'display': 'flex'
+    'display': 'flex',
+    'justify-content': 'center'
 }
