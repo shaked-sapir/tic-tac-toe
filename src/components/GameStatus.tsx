@@ -30,7 +30,8 @@ const resetStyle = {
     'color': 'black',
     'padding': '5px 10px',
     'cursor': 'pointer',
-    'display': 'flex',
+    'display': 'table-cell',
+    'vertical-align': 'middle',
     'justify-content': 'flex-end',
     'align': 'right'
 }

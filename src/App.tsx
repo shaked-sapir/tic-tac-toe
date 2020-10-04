@@ -1,10 +1,10 @@
 import React from 'react';
 import './App.css';
-import Board from './components/Board';
+import AppContainer from './AppContainer';
 
 function App() {
   return (
-    <Board></Board>
+    <AppContainer></AppContainer>
   );
 }
 
