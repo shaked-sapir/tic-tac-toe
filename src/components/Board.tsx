@@ -25,7 +25,7 @@ export default function Board() {
         playMove(index, player);
     }
 
-    const getCurrentPlayer = () => {
+    function getCurrentPlayer(){
         return xIsNext ? X : O;
     }
 
@@ -57,6 +57,7 @@ export default function Board() {
 
     const checkIfGameOver = () => {
         const winnerSide = getWinner();
+        
         if (winnerSide) {
             setWinner(winnerSide);
             setStatus(`${winnerSide} won!`);
@@ -69,18 +70,20 @@ export default function Board() {
     }
 
     const getWinner = () => {
+        let result = null;
+
         winningConfigs["3x3"].forEach((winningOption: number[]) => {
             const combinationOnBoard = winningOption.reduce((seq: string[], idx: number) => {
                 return [...seq, boardCells[idx]];
             }, []);
 
             if (isCombinationWinning(combinationOnBoard)) {
-                return combinationOnBoard[0];
+                result =  combinationOnBoard[0];
             }
         });
 
         // no winner yet
-        return null;
+        return result;
     }
 
     const isCombinationWinning = (combination: string[]) => {
